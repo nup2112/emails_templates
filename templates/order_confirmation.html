@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="header">
+        {% if company.logo_url %}
+        <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="logo">
+        {% endif %}
+        <h1>Confirmación de Pedido</h1>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h2>¡Gracias por tu compra, {{ customer.name }}! 🎉</h2>
+            <div class="alert alert-success">
+                <p><strong>Pedido #{{ order_info.number }}</strong></p>
+                <p>Fecha: {{ order_info.created_at }}</p>
+                <p>Artículos: {{ order_info.items_count }}</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📦 Detalles del Pedido</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>SKU</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in order_info.products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td><code>{{ product.sku }}</code></td>
+                            <td>{{ product.quantity }}</td>
+                            <td>${{ product.price }}</td>
+                            <td><strong>${{ product.total }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td colspan="4" class="text-right"><strong>Total del Pedido:</strong></td>
+                            <td><strong>${{ order_info.total }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🚚 Información de Envío</h3>
+            <div class="alert alert-success">
+                <p><strong>Dirección de entrega:</strong><br>
+                {{ order_info.shipping_address }}</p>
+                <p><strong>Tiempo estimado de entrega:</strong><br>
+                {{ order_info.delivery_estimate }}</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 Próximos Pasos</h3>
+            <ul>
+                <li>
+                    <strong>Seguimiento de pedido</strong>
+                    <p>Recibirás actualizaciones sobre el estado de tu pedido por email</p>
+                </li>
+                <li>
+                    <strong>Monitoreo en tiempo real</strong>
+                    <p>Puedes hacer seguimiento desde tu cuenta en cualquier momento</p>
+                </li>
+                <li>
+                    <strong>Notificaciones de envío</strong>
+                    <p>Te avisaremos cuando tu pedido esté en camino</p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>💬 ¿Necesitas Ayuda?</h3>
+            <p>Si tienes alguna pregunta sobre tu pedido, contáctanos:</p>
+            <div class="alert alert-success">
+                <p><strong>Email:</strong> {{ company.support_email }}</p>
+                <p><strong>Web:</strong> {{ company.website }}</p>
+                <p><strong>Número de pedido:</strong> {{ order_info.number }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="social-links">
+            {% if company.social_media.facebook %}
+            <a href="{{ company.social_media.facebook }}" class="social-link">Facebook</a>
+            {% endif %}
+            {% if company.social_media.twitter %}
+            <a href="{{ company.social_media.twitter }}" class="social-link">Twitter</a>
+            {% endif %}
+            {% if company.social_media.instagram %}
+            <a href="{{ company.social_media.instagram }}" class="social-link">Instagram</a>
+            {% endif %}
+        </div>
+        <p>© {{ year }} {{ company.name }}. Todos los derechos reservados.</p>
+        <p>{{ company.address }}</p>
+    </div>
+</div>
+{% endblock %}

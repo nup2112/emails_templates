@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="header" style="background-color: {% if alert.type == 'error' %}var(--error-color){% elif alert.type == 'warning' %}var(--warning-color){% else %}var(--primary-color){% endif %};">
+        {% if company.logo_url %}
+        <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="logo">
+        {% endif %}
+        <h1>{{ alert.title }}</h1>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h2>¡Atención {{ user.name }}! ⚠️</h2>
+            
+            <div class="alert {% if alert.type == 'error' %}alert-error{% elif alert.type == 'warning' %}alert-warning{% else %}alert-success{% endif %}">
+                <div class="mb-4">
+                    {{ alert.message }}
+                </div>
+
+                {% if alert.steps %}
+                <div class="mt-4">
+                    <h3>📋 Pasos a seguir:</h3>
+                    <ul>
+                        {% for step in alert.steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if alert.action_url %}
+                <div class="text-center mt-4">
+                    <a href="{{ alert.action_url }}" class="button" style="background-color: {% if alert.type == 'error' %}var(--error-color){% elif alert.type == 'warning' %}var(--warning-color){% else %}var(--primary-color){% endif %};">
+                        {{ alert.action_text }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if alert.contact_support %}
+        <div class="card">
+            <h3>💬 ¿Necesitas ayuda?</h3>
+            <p>Nuestro equipo de soporte está disponible para ayudarte:</p>
+            <div class="alert alert-success">
+                <p><strong>Email:</strong> {{ company.support_email }}</p>
+                <p><strong>Web:</strong> {{ company.website }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        <p>© {{ year }} {{ company.name }}. Todos los derechos reservados.</p>
+        <p>{{ company.address }}</p>
+    </div>
+</div>
+{% endblock %}

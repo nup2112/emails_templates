@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="header">
+        {% if company.logo_url %}
+        <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="logo">
+        {% endif %}
+        <h1>{{ notification.title }}</h1>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h2>¡Hola {{ user.name }}! 🔔</h2>
+            
+            <div class="notification-content">
+                {% if notification.icon %}
+                <div style="text-align: center; margin: 24px 0;">
+                    <img src="{{ notification.icon }}" alt="Notification Icon" style="width: 64px; height: 64px; padding: 12px; background: #f8fafc; border-radius: 12px;">
+                </div>
+                {% endif %}
+                
+                <div class="alert {% if notification.type == 'success' %}alert-success{% elif notification.type == 'warning' %}alert-warning{% elif notification.type == 'error' %}alert-error{% endif %}">
+                    {{ notification.message }}
+                </div>
+
+                {% if notification.action_url %}
+                <div class="text-center mt-4">
+                    <a href="{{ notification.action_url }}" class="button">
+                        {{ notification.action_text }}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if notification.additional_info %}
+        <div class="card">
+            <h3>ℹ️ Información adicional</h3>
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px;">
+                {{ notification.additional_info }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="notification-footer">
+                <p>Recibiste esta notificación porque estás suscrito a <strong>{{ notification.type }}</strong>.</p>
+                <div class="mt-4">
+                    <a href="{{ preferences_url }}" class="button button-outline">
+                        Administrar preferencias de notificación
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="social-links">
+            {% if company.social_media.facebook %}
+            <a href="{{ company.social_media.facebook }}" class="social-link">Facebook</a>
+            {% endif %}
+            {% if company.social_media.twitter %}
+            <a href="{{ company.social_media.twitter }}" class="social-link">Twitter</a>
+            {% endif %}
+            {% if company.social_media.instagram %}
+            <a href="{{ company.social_media.instagram }}" class="social-link">Instagram</a>
+            {% endif %}
+        </div>
+        <p>© {{ year }} {{ company.name }}. Todos los derechos reservados.</p>
+        <p>{{ company.address }}</p>
+    </div>
+</div>
+{% endblock %}

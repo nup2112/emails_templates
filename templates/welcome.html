@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="header">
+        {% if company.logo_url %}
+        <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="logo">
+        {% endif %}
+        <h1>¡Bienvenido a {{ company.name }}!</h1>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h2>¡Hola {{ user.name }}! 👋</h2>
+            <p class="mb-4">Nos alegra mucho darte la bienvenida a nuestra comunidad. Tu cuenta ha sido creada exitosamente con el email: <strong>{{ user.email }}</strong></p>
+            
+            <div class="text-center">
+                <a href="{{ dashboard_url }}" class="button">
+                    Acceder a tu Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🎯 Próximos pasos</h3>
+            <ul>
+                <li>
+                    <strong>Personaliza tu perfil</strong>
+                    <p>Configura tu información para aprovechar al máximo tu experiencia</p>
+                </li>
+                <li>
+                    <strong>Explora nuestros servicios</strong>
+                    <p>Descubre todo lo que tenemos para ofrecerte</p>
+                </li>
+                <li>
+                    <strong>Conecta con la comunidad</strong>
+                    <p>Interactúa con otros miembros y comparte experiencias</p>
+                </li>
+                <li>
+                    <strong>Configura tus notificaciones</strong>
+                    <p>Decide qué información quieres recibir y cuándo</p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>💬 ¿Necesitas ayuda?</h3>
+            <p>Nuestro equipo de soporte está disponible para ayudarte en cualquier momento:</p>
+            <div class="alert alert-success">
+                <p><strong>Email:</strong> {{ company.support_email }}</p>
+                <p><strong>Web:</strong> {{ company.website }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="social-links">
+            {% if company.social_media.facebook %}
+            <a href="{{ company.social_media.facebook }}" class="social-link">Facebook</a>
+            {% endif %}
+            {% if company.social_media.twitter %}
+            <a href="{{ company.social_media.twitter }}" class="social-link">Twitter</a>
+            {% endif %}
+            {% if company.social_media.instagram %}
+            <a href="{{ company.social_media.instagram }}" class="social-link">Instagram</a>
+            {% endif %}
+        </div>
+        <p>© {{ year }} {{ company.name }}. Todos los derechos reservados.</p>
+        <p>{{ company.address }}</p>
+    </div>
+</div>
+{% endblock %}
