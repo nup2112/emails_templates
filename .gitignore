@@ -4,3 +4,7 @@
 .states
 assets/external/
 __pycache__/
+.venv/
+*.log
+*.env
+
