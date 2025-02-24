@@ -7,8 +7,6 @@ Un sistema robusto y flexible para el envío de emails transaccionales y marketi
 - **Plantillas Responsivas**: Diseños adaptables y modernos para todos los clientes de correo
 - **Múltiples Tipos de Email**:
   - Emails de Bienvenida
-  - Confirmaciones de Pedido
-  - Newsletters
   - Restablecimiento de Contraseña
   - Notificaciones
   - Alertas
@@ -86,39 +84,9 @@ email_service.send(
 )
 ```
 
-#### Confirmación de Pedido
-```python
-from templates import OrderConfirmationEmail
-from models import Order, OrderItem
-
-order = Order(
-    number="ORD-123",
-    items=[
-        OrderItem(name="Producto 1", quantity=2, price=29.99),
-        OrderItem(name="Producto 2", quantity=1, price=49.99)
-    ],
-    shipping_address="Calle Principal 123",
-    delivery_estimate="2-3 días hábiles"
-)
-
-confirmation_email = OrderConfirmationEmail(
-    company=company,
-    customer=EmailAddress("cliente@ejemplo.com", "Cliente"),
-    order=order
-)
-
-email_service.send(
-    email=confirmation_email,
-    to=EmailAddress("cliente@ejemplo.com", "Cliente"),
-    subject="Confirmación de tu pedido #ORD-123"
-)
-```
-
 ## 📝 Plantillas Disponibles
 
 1. **welcome.html**: Email de bienvenida para nuevos usuarios
-2. **order_confirmation.html**: Confirmación de pedidos
-3. **newsletter.html**: Boletines informativos
 4. **password_reset.html**: Restablecimiento de contraseña
 5. **notification.html**: Notificaciones generales
 6. **alert.html**: Alertas y advertencias
@@ -153,9 +121,7 @@ sistema-emails/
 ├── templates/
 │   ├── alert.html
 │   ├── base.html
-│   ├── newsletter.html
 │   ├── notification.html
-│   ├── order_confirmation.html
 │   ├── password_reset.html
 │   └── welcome.html
 ├── requirements.txt

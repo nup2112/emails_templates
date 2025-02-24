@@ -6,13 +6,11 @@ import os
 from datetime import datetime
 
 from models import (
-    Company, EmailAddress, Order, OrderItem, 
-    NewsletterArticle, Notification, Alert
+    Company, EmailAddress, Notification, Alert
 )
 from service import EmailService
 from emails.templates import (
-    WelcomeEmail, OrderConfirmationEmail, NewsletterEmail,
-    PasswordResetEmail, NotificationEmail, AlertEmail
+    WelcomeEmail, PasswordResetEmail, NotificationEmail, AlertEmail
 )
 
 app = FastAPI(title="Email System API", version="1.0.0")
@@ -118,76 +116,6 @@ async def send_welcome_email(
             email=email,
             to=user_obj,
             subject=f"¡Bienvenido a {company.name}!"
-        )
-        
-        return {"status": "success", "message_id": result.get("id")}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/emails/order-confirmation")
-async def send_order_confirmation(
-    company: CompanyBase,
-    customer: EmailAddressBase,
-    order: OrderBase,
-    api_key: str = Depends(verify_api_key)
-):
-    try:
-        service = get_email_service()
-        company_obj = Company(**company.model_dump())
-        customer_obj = EmailAddress(**customer.model_dump())
-        
-        # Convertir items del pedido
-        order_items = [OrderItem(**item.model_dump()) for item in order.items]
-        order_obj = Order(
-            number=order.number,
-            items=order_items,
-            shipping_address=order.shipping_address,
-            delivery_estimate=order.delivery_estimate
-        )
-        
-        email = OrderConfirmationEmail(
-            company=company_obj,
-            customer=customer_obj,
-            order=order_obj
-        )
-        
-        result = service.send(
-            email=email,
-            to=customer_obj,
-            subject=f"Confirmación de tu pedido #{order.number}"
-        )
-        
-        return {"status": "success", "message_id": result.get("id")}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/emails/newsletter")
-async def send_newsletter(
-    company: CompanyBase,
-    subscriber: EmailAddressBase,
-    query: dict,
-    api_key: str = Depends(verify_api_key)
-):
-    try:
-        service = get_email_service()
-        company_obj = Company(**company.model_dump())
-        subscriber_obj = EmailAddress(**subscriber.model_dump())
-        articles_obj = [NewsletterArticle(**article) for article in query.get('articles', [])]
-        
-        email = NewsletterEmail(
-            company=company_obj,
-            subscriber=subscriber_obj,
-            title=query.get('title'),
-            intro=query.get('intro'),
-            articles=articles_obj,
-            unsubscribe_url=query.get('unsubscribe_url'),
-            preference_url=query.get('preference_url')
-        )
-        
-        result = service.send(
-            email=email,
-            to=subscriber_obj,
-            subject=query.get('title')
         )
         
         return {"status": "success", "message_id": result.get("id")}

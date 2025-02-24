@@ -26,52 +26,6 @@ class Company:
     logo_url: Optional[str] = None
 
 @dataclass
-class OrderItem:
-    """Representa un ítem individual en una orden."""
-    name: str
-    quantity: int
-    price: float
-    sku: Optional[str] = None
-    
-    @property
-    def total(self) -> float:
-        return round(self.quantity * self.price, 2)
-
-    def __post_init__(self):
-        if self.quantity <= 0:
-            raise ValueError("La cantidad debe ser mayor que 0")
-        if self.price < 0:
-            raise ValueError("El precio no puede ser negativo")
-
-@dataclass
-class Order:
-    """Representa una orden completa con sus ítems y detalles de envío."""
-    number: str
-    items: List[OrderItem]
-    shipping_address: str
-    delivery_estimate: str
-    created_at: datetime = field(default_factory=datetime.now)
-    status: str = "pending"
-    
-    @property
-    def total(self) -> float:
-        return round(sum(item.total for item in self.items), 2)
-
-    @property
-    def items_count(self) -> int:
-        return sum(item.quantity for item in self.items)
-
-@dataclass
-class NewsletterArticle:
-    """Artículo para incluir en newsletters."""
-    title: str
-    image_url: str
-    excerpt: str
-    url: str
-    author: Optional[str] = None
-    reading_time: Optional[int] = None
-
-@dataclass
 class Notification:
     """Representa una notificación para enviar por email."""
     title: str

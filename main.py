@@ -40,14 +40,6 @@ class EmailTesterGUI(QMainWindow):
         welcome_tab = self.create_welcome_tab()
         tabs.addTab(welcome_tab, "Bienvenida")
         
-        # Pestaña de Confirmación de Orden
-        order_tab = self.create_order_tab()
-        tabs.addTab(order_tab, "Pedido")
-        
-        # Pestaña de Newsletter
-        newsletter_tab = self.create_newsletter_tab()
-        tabs.addTab(newsletter_tab, "Newsletter")
-        
         # Pestaña de Reset de Contraseña
         password_tab = self.create_password_reset_tab()
         tabs.addTab(password_tab, "Reset Contraseña")
@@ -109,120 +101,7 @@ class EmailTesterGUI(QMainWindow):
         
         layout.addStretch()
         return tab
-    
-    def create_order_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
         
-        layout.addWidget(self.create_company_group())
-        
-        # Información del cliente
-        customer_group = QGroupBox("Información del Cliente")
-        customer_layout = QFormLayout()
-        
-        self.order_customer_name = QLineEdit()
-        self.order_customer_email = QLineEdit()
-        
-        customer_layout.addRow("Nombre:", self.order_customer_name)
-        customer_layout.addRow("Email:", self.order_customer_email)
-        
-        customer_group.setLayout(customer_layout)
-        layout.addWidget(customer_group)
-        
-        # Información del pedido
-        order_group = QGroupBox("Información del Pedido")
-        order_layout = QFormLayout()
-        
-        self.order_number = QLineEdit("ORD-001")
-        self.order_items = QTextEdit()
-        self.order_items.setPlaceholderText("""[
-    {"name": "Producto 1", "quantity": 2, "price": 29.99},
-    {"name": "Producto 2", "quantity": 1, "price": 49.99}
-]""")
-        self.shipping_address = QLineEdit("Calle Cliente 456")
-        self.delivery_estimate = QLineEdit("2-3 días hábiles")
-        
-        order_layout.addRow("Número:", self.order_number)
-        order_layout.addRow("Items (JSON):", self.order_items)
-        order_layout.addRow("Dirección:", self.shipping_address)
-        order_layout.addRow("Estimación:", self.delivery_estimate)
-        
-        order_group.setLayout(order_layout)
-        layout.addWidget(order_group)
-        
-        # Botón de envío
-        send_button = QPushButton("Enviar Confirmación de Pedido")
-        send_button.clicked.connect(self.send_order_confirmation)
-        layout.addWidget(send_button)
-        
-        layout.addStretch()
-        return tab
-    
-    def create_newsletter_tab(self):
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        
-        layout.addWidget(self.create_company_group())
-        
-        # Información del suscriptor
-        subscriber_group = QGroupBox("Información del Suscriptor")
-        subscriber_layout = QFormLayout()
-        
-        self.newsletter_subscriber_name = QLineEdit()
-        self.newsletter_subscriber_email = QLineEdit()
-        
-        subscriber_layout.addRow("Nombre:", self.newsletter_subscriber_name)
-        subscriber_layout.addRow("Email:", self.newsletter_subscriber_email)
-        
-        subscriber_group.setLayout(subscriber_layout)
-        layout.addWidget(subscriber_group)
-        
-        # Contenido del newsletter
-        content_group = QGroupBox("Contenido del Newsletter")
-        content_layout = QFormLayout()
-        
-        self.newsletter_title = QLineEdit("Newsletter Mensual")
-        self.newsletter_intro = QTextEdit()
-        self.newsletter_articles = QTextEdit()
-        self.newsletter_articles.setPlaceholderText("""[
-    {
-        "title": "Artículo 1",
-        "image_url": "https://ejemplo.com/imagen1.jpg",
-        "excerpt": "Resumen del artículo 1",
-        "url": "https://ejemplo.com/articulo1",
-        "author": "Autor 1",
-        "reading_time": 5
-    }
-]""")
-        
-        content_layout.addRow("Título:", self.newsletter_title)
-        content_layout.addRow("Introducción:", self.newsletter_intro)
-        content_layout.addRow("Artículos (JSON):", self.newsletter_articles)
-        
-        content_group.setLayout(content_layout)
-        layout.addWidget(content_group)
-        
-        # URLs
-        urls_group = QGroupBox("URLs")
-        urls_layout = QFormLayout()
-        
-        self.unsubscribe_url = QLineEdit("https://miempresa.com/unsubscribe")
-        self.preference_url = QLineEdit("https://miempresa.com/preferences")
-        
-        urls_layout.addRow("Unsubscribe:", self.unsubscribe_url)
-        urls_layout.addRow("Preferencias:", self.preference_url)
-        
-        urls_group.setLayout(urls_layout)
-        layout.addWidget(urls_group)
-        
-        # Botón de envío
-        send_button = QPushButton("Enviar Newsletter")
-        send_button.clicked.connect(self.send_newsletter)
-        layout.addWidget(send_button)
-        
-        layout.addStretch()
-        return tab
-    
     def create_password_reset_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
@@ -458,62 +337,6 @@ class EmailTesterGUI(QMainWindow):
         print("Enviando datos:", json.dumps(data, indent=2))
         
         self.make_api_request("welcome", data)
-
-    def send_order_confirmation(self):
-        """Envía una confirmación de pedido"""
-        try:
-            items = json.loads(self.order_items.toPlainText())
-        except json.JSONDecodeError:
-            QMessageBox.warning(self, "Error", "El formato JSON de los items no es válido")
-            return
-        
-        data = {
-            "company": self.get_company_data(),
-            "customer": {
-                "name": self.order_customer_name.text(),
-                "email": self.order_customer_email.text()
-            },
-            "order": {
-                "number": self.order_number.text(),
-                "items": items,
-                "shipping_address": self.shipping_address.text(),
-                "delivery_estimate": self.delivery_estimate.text()
-            }
-        }
-        self.make_api_request("order-confirmation", data)
-
-    def send_newsletter(self):
-        """Envía un newsletter"""
-        # Validar campos requeridos
-        if not self.newsletter_subscriber_email.text():
-            QMessageBox.warning(self, "Error", "El email del suscriptor es requerido")
-            return
-            
-        try:
-            articles = json.loads(self.newsletter_articles.toPlainText())
-        except json.JSONDecodeError:
-            QMessageBox.warning(self, "Error", "El formato JSON de los artículos no es válido")
-            return
-        
-        data = {
-            "company": self.get_company_data(),
-            "subscriber": {
-                "name": self.newsletter_subscriber_name.text() or None,
-                "email": self.newsletter_subscriber_email.text()
-            },
-            "query": {
-                "title": self.newsletter_title.text(),
-                "intro": self.newsletter_intro.toPlainText(),
-                "articles": articles,
-                "unsubscribe_url": self.unsubscribe_url.text(),
-                "preference_url": self.preference_url.text()
-            }
-        }
-        
-        # Imprimir datos para debug
-        print("Enviando datos:", json.dumps(data, indent=2))
-        
-        self.make_api_request("newsletter", data)
 
     def send_password_reset(self):
         """Envía un email de reset de contraseña"""
