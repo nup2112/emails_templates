@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from emails.validation import validate_email, validate_emails
 
 class EmailPreviewDialog(QDialog):
     def __init__(self, html_content, parent=None):
@@ -79,6 +80,92 @@ class EmailPreviewDialog(QDialog):
                 QMessageBox.information(self, "Éxito", f"HTML guardado en: {file_path}")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo guardar el archivo: {str(e)}")
+
+class EmailRecipientsDialog(QDialog):
+    """Diálogo para gestionar múltiples destinatarios con nombres personalizados"""
+    def __init__(self, parent=None, emails=None, names=None):
+        super().__init__(parent)
+        self.setWindowTitle("Gestionar Destinatarios")
+        self.resize(500, 400)
+        
+        layout = QVBoxLayout(self)
+        
+        # Instrucciones
+        instructions = QLabel("Ingrese un email y nombre por línea, separados por coma o punto y coma.\nEjemplo: juan@ejemplo.com, Juan Pérez")
+        layout.addWidget(instructions)
+        
+        # Campo de texto para ingresar destinatarios
+        self.recipients_text = QTextEdit()
+        self.recipients_text.setPlaceholderText("email1@ejemplo.com, Nombre 1\nemail2@ejemplo.com, Nombre 2")
+        
+        # Si se proporcionan emails, llenar el campo
+        if emails:
+            text_lines = []
+            for i, email in enumerate(emails):
+                name = ""
+                if names and i < len(names) and names[i]:
+                    name = names[i]
+                text_lines.append(f"{email}, {name}" if name else email)
+            self.recipients_text.setText("\n".join(text_lines))
+        
+        layout.addWidget(self.recipients_text)
+        
+        # Contador de destinatarios
+        self.counter = QLabel("0 destinatarios")
+        self.counter.setStyleSheet("color: gray;")
+        layout.addWidget(self.counter)
+        
+        # Actualizar contador cuando cambia el texto
+        def update_counter():
+            text = self.recipients_text.toPlainText()
+            lines = [line.strip() for line in text.split('\n') if line.strip()]
+            self.counter.setText(f"{len(lines)} destinatario{'s' if len(lines) != 1 else ''}")
+        
+        self.recipients_text.textChanged.connect(update_counter)
+        update_counter()  # Actualizar al inicio
+        
+        # Botones
+        button_layout = QHBoxLayout()
+        
+        cancel_button = QPushButton("Cancelar")
+        cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_button)
+        
+        button_layout.addStretch()
+        
+        save_button = QPushButton("Guardar")
+        save_button.clicked.connect(self.accept)
+        save_button.setDefault(True)
+        button_layout.addWidget(save_button)
+        
+        layout.addLayout(button_layout)
+    
+    def get_recipients(self):
+        """Retorna una lista de tuplas (email, nombre)"""
+        text = self.recipients_text.toPlainText()
+        recipients = []
+        
+        for line in text.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Intentar separar por coma o punto y coma
+            if ',' in line:
+                parts = line.split(',', 1)
+            elif ';' in line:
+                parts = line.split(';', 1)
+            else:
+                # Solo email sin nombre
+                parts = [line, ""]
+            
+            email = parts[0].strip()
+            name = parts[1].strip() if len(parts) > 1 else ""
+            
+            if email:
+                recipients.append((email, name))
+        
+        return recipients                
 
 class EmailTesterGUI(QMainWindow):
     def __init__(self):
@@ -156,6 +243,74 @@ class EmailTesterGUI(QMainWindow):
         if directory:
             self.templates_dir_input.setText(directory)
             self.setup_template_engine(directory)
+
+    def manage_recipients(self, tab_type):
+        """Abre un diálogo para gestionar destinatarios con nombres personalizados"""
+        # Obtener el campo de email según la pestaña
+        if tab_type == "welcome":
+            email_field = self.welcome_user_email
+        elif tab_type == "password_reset":
+            email_field = self.reset_user_email
+        elif tab_type == "notification":
+            email_field = self.notification_user_email
+        elif tab_type == "alert":
+            email_field = self.alert_user_email
+        else:
+            return
+        
+        # Obtener emails actuales
+        emails_text = email_field.toPlainText()
+        emails = [email.strip() for email in emails_text.split('\n') if email.strip()]
+        
+        # Obtener nombres personalizados si existen (atributo personalizado)
+        names = getattr(email_field, 'recipient_names', [])
+        
+        # Crear y mostrar el diálogo
+        dialog = EmailRecipientsDialog(self, emails, names)
+        if dialog.exec_() == QDialog.Accepted:
+            # Obtener los destinatarios del diálogo
+            recipients = dialog.get_recipients()
+            
+            # Actualizar el campo de email
+            email_field.setText("\n".join([email for email, _ in recipients]))
+            
+            # Guardar los nombres para uso posterior
+            email_field.recipient_names = [name for _, name in recipients]
+            
+            # Actualizar contador si existe
+            if hasattr(email_field, 'counter'):
+                email_field.counter.setText(f"{len(recipients)} destinatario{'s' if len(recipients) != 1 else ''}")
+
+    def create_email_recipients_field(self, placeholder="Ingrese un email por línea"):
+        """Crea un campo para ingresar múltiples destinatarios con contador"""
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Campo de texto para ingresar emails
+        field = QTextEdit()
+        field.setPlaceholderText(placeholder)
+        field.setMaximumHeight(80)  # Limitar altura
+        
+        # Etiqueta para mostrar contador de destinatarios
+        counter = QLabel("0 destinatarios")
+        counter.setStyleSheet("color: gray; font-size: 10px;")
+        
+        # Actualizar contador cuando cambia el texto
+        def update_counter():
+            text = field.toPlainText()
+            emails = [email.strip() for email in text.split('\n') if email.strip()]
+            counter.setText(f"{len(emails)} destinatario{'s' if len(emails) != 1 else ''}")
+        
+        field.textChanged.connect(update_counter)
+        
+        # Almacenar el contador como atributo del campo para acceder después
+        field.counter = counter
+        
+        layout.addWidget(field)
+        layout.addWidget(counter)
+        
+        return container, field
     
     def setup_template_engine(self, custom_dir=None):
         """Configura el motor de plantillas Jinja2"""
@@ -233,11 +388,24 @@ class EmailTesterGUI(QMainWindow):
         user_layout = QFormLayout()
         
         self.welcome_user_name = QLineEdit("Usuario de Prueba")
-        self.welcome_user_email = QLineEdit("usuario@ejemplo.com")
+        
+        # Crear campo de emails con contador
+        email_container, self.welcome_user_email = self.create_email_recipients_field()
+        self.welcome_user_email.setText("usuario@ejemplo.com")
+        
+        # Botón para gestionar destinatarios
+        manage_recipients_button = QPushButton("Gestionar Destinatarios")
+        manage_recipients_button.clicked.connect(lambda: self.manage_recipients("welcome"))
+        
+        # Layout para campo de email y botón
+        email_layout = QHBoxLayout()
+        email_layout.addWidget(email_container)
+        email_layout.addWidget(manage_recipients_button)
+        
         self.welcome_dashboard_url = QLineEdit("https://miempresa.com/dashboard")
         
-        user_layout.addRow("Nombre:", self.welcome_user_name)
-        user_layout.addRow("Email:", self.welcome_user_email)
+        user_layout.addRow("Nombre por defecto:", self.welcome_user_name)
+        user_layout.addRow("Email(s):", email_layout)
         user_layout.addRow("Dashboard URL:", self.welcome_dashboard_url)
         
         user_group.setLayout(user_layout)
@@ -258,6 +426,7 @@ class EmailTesterGUI(QMainWindow):
         
         layout.addStretch()
         return tab
+
         
     def create_password_reset_tab(self):
         tab = QWidget()
@@ -270,14 +439,27 @@ class EmailTesterGUI(QMainWindow):
         user_layout = QFormLayout()
         
         self.reset_user_name = QLineEdit("Usuario de Prueba")
-        self.reset_user_email = QLineEdit("usuario@ejemplo.com")
+        
+        # Crear campo de emails con contador
+        email_container, self.reset_user_email = self.create_email_recipients_field()
+        self.reset_user_email.setText("usuario@ejemplo.com")
+        
+        # Botón para gestionar destinatarios
+        manage_recipients_button = QPushButton("Gestionar Destinatarios")
+        manage_recipients_button.clicked.connect(lambda: self.manage_recipients("password_reset"))
+        
+        # Layout para campo de email y botón
+        email_layout = QHBoxLayout()
+        email_layout.addWidget(email_container)
+        email_layout.addWidget(manage_recipients_button)
+        
         self.reset_url = QLineEdit("https://miempresa.com/reset-password")
         self.expires_in = QSpinBox()
         self.expires_in.setValue(24)
         self.expires_in.setRange(1, 72)
         
-        user_layout.addRow("Nombre:", self.reset_user_name)
-        user_layout.addRow("Email:", self.reset_user_email)
+        user_layout.addRow("Nombre por defecto:", self.reset_user_name)
+        user_layout.addRow("Email(s):", email_layout)
         user_layout.addRow("Reset URL:", self.reset_url)
         user_layout.addRow("Expira en (horas):", self.expires_in)
         
@@ -311,10 +493,22 @@ class EmailTesterGUI(QMainWindow):
         user_layout = QFormLayout()
         
         self.notification_user_name = QLineEdit("Usuario de Prueba")
-        self.notification_user_email = QLineEdit("usuario@ejemplo.com")
         
-        user_layout.addRow("Nombre:", self.notification_user_name)
-        user_layout.addRow("Email:", self.notification_user_email)
+        # Crear campo de emails con contador
+        email_container, self.notification_user_email = self.create_email_recipients_field()
+        self.notification_user_email.setText("usuario@ejemplo.com")
+        
+        # Botón para gestionar destinatarios
+        manage_recipients_button = QPushButton("Gestionar Destinatarios")
+        manage_recipients_button.clicked.connect(lambda: self.manage_recipients("notification"))
+        
+        # Layout para campo de email y botón
+        email_layout = QHBoxLayout()
+        email_layout.addWidget(email_container)
+        email_layout.addWidget(manage_recipients_button)
+        
+        user_layout.addRow("Nombre por defecto:", self.notification_user_name)
+        user_layout.addRow("Email(s):", email_layout)
         
         user_group.setLayout(user_layout)
         layout.addWidget(user_group)
@@ -372,10 +566,22 @@ class EmailTesterGUI(QMainWindow):
         user_layout = QFormLayout()
         
         self.alert_user_name = QLineEdit("Usuario de Prueba")
-        self.alert_user_email = QLineEdit("usuario@ejemplo.com")
         
-        user_layout.addRow("Nombre:", self.alert_user_name)
-        user_layout.addRow("Email:", self.alert_user_email)
+        # Crear campo de emails con contador
+        email_container, self.alert_user_email = self.create_email_recipients_field()
+        self.alert_user_email.setText("usuario@ejemplo.com")
+        
+        # Botón para gestionar destinatarios
+        manage_recipients_button = QPushButton("Gestionar Destinatarios")
+        manage_recipients_button.clicked.connect(lambda: self.manage_recipients("alert"))
+        
+        # Layout para campo de email y botón
+        email_layout = QHBoxLayout()
+        email_layout.addWidget(email_container)
+        email_layout.addWidget(manage_recipients_button)
+        
+        user_layout.addRow("Nombre por defecto:", self.alert_user_name)
+        user_layout.addRow("Email(s):", email_layout)
         
         user_group.setLayout(user_layout)
         layout.addWidget(user_group)
@@ -460,13 +666,60 @@ class EmailTesterGUI(QMainWindow):
                 )
                 return
             
+            # Obtener el campo de email y nombre según el tipo de email
+            if email_type == "welcome":
+                email_field = self.welcome_user_email
+                name_field = self.welcome_user_name
+            elif email_type == "password_reset":
+                email_field = self.reset_user_email
+                name_field = self.reset_user_name
+            elif email_type == "notification":
+                email_field = self.notification_user_email
+                name_field = self.notification_user_name
+            elif email_type == "alert":
+                email_field = self.alert_user_email
+                name_field = self.alert_user_name
+            
+            # Procesar los emails (uno por línea)
+            emails_text = email_field.toPlainText()
+            emails = [email.strip() for email in emails_text.split('\n') if email.strip()]
+            
+            if not emails:
+                QMessageBox.warning(self, "Error", "No hay emails disponibles para la vista previa")
+                return
+            
+            # Obtener nombres personalizados si existen
+            names = getattr(email_field, 'recipient_names', [])
+            
+            # Validar emails
+            valid_emails, invalid_emails = validate_emails(emails)
+            
+            if not valid_emails:
+                QMessageBox.warning(self, "Error", "No se encontraron emails válidos para la vista previa")
+                return
+            
+            # Usar el primer email válido para la vista previa
+            preview_email_idx = 0
+            for i, email in enumerate(emails):
+                if email in valid_emails:
+                    preview_email_idx = i
+                    break
+            
+            email = valid_emails[0]
+            
+            # Obtener el nombre correspondiente
+            if preview_email_idx < len(names) and names[preview_email_idx]:
+                name = names[preview_email_idx]
+            else:
+                name = name_field.text() or "Usuario"
+            
             # Preparar los datos según el tipo de email
             if email_type == "welcome":
                 data = {
                     "company": self.get_company_data(),
                     "user": {
-                        "name": self.welcome_user_name.text(),
-                        "email": self.welcome_user_email.text()
+                        "name": name,
+                        "email": email
                     },
                     "dashboard_url": self.welcome_dashboard_url.text(),
                     "year": 2025
@@ -475,8 +728,8 @@ class EmailTesterGUI(QMainWindow):
                 data = {
                     "company": self.get_company_data(),
                     "user": {
-                        "name": self.reset_user_name.text(),
-                        "email": self.reset_user_email.text()
+                        "name": name,
+                        "email": email
                     },
                     "reset_url": self.reset_url.text(),
                     "expires_in": self.expires_in.value(),
@@ -486,8 +739,8 @@ class EmailTesterGUI(QMainWindow):
                 data = {
                     "company": self.get_company_data(),
                     "user": {
-                        "name": self.notification_user_name.text(),
-                        "email": self.notification_user_email.text()
+                        "name": name,
+                        "email": email
                     },
                     "notification": {
                         "title": self.notification_title.text(),
@@ -511,8 +764,8 @@ class EmailTesterGUI(QMainWindow):
                 data = {
                     "company": self.get_company_data(),
                     "user": {
-                        "name": self.alert_user_name.text(),
-                        "email": self.alert_user_email.text()
+                        "name": name,
+                        "email": email
                     },
                     "alert": {
                         "title": self.alert_title.text(),
@@ -529,8 +782,33 @@ class EmailTesterGUI(QMainWindow):
             # Renderizar la plantilla
             html_content = template.render(**data)
             
-            # Mostrar el diálogo de vista previa
+            # Crear un mensaje informativo sobre los destinatarios
+            if len(valid_emails) > 1:
+                recipient_info = f"Vista previa para: {name} <{email}>"
+                recipient_info += f"\n\nEste email se enviará a {len(valid_emails)} destinatarios:"
+                
+                for i, valid_email in enumerate(valid_emails, 1):
+                    idx = emails.index(valid_email)
+                    recipient_name = names[idx] if idx < len(names) and names[idx] else name_field.text() or "Usuario"
+                    recipient_info += f"\n{i}. {recipient_name} <{valid_email}>"
+                
+                if invalid_emails:
+                    recipient_info += f"\n\nSe encontraron {len(invalid_emails)} emails inválidos que serán ignorados."
+            else:
+                recipient_info = f"Vista previa para el destinatario: {name} <{email}>"
+            
+            # Mostrar el diálogo de vista previa con información adicional
             preview_dialog = EmailPreviewDialog(html_content, self)
+            preview_dialog.setWindowTitle(f"Vista Previa - {len(valid_emails)} destinatario(s)")
+            
+            # Añadir un widget para mostrar información de destinatarios
+            info_label = QLabel(recipient_info)
+            info_label.setStyleSheet("background-color: #f0f8ff; padding: 10px; border-radius: 5px;")
+            info_label.setWordWrap(True)
+            
+            # Insertar el widget en el layout del diálogo antes del navegador
+            preview_dialog.layout().insertWidget(0, info_label)
+            
             preview_dialog.exec_()
             
         except Exception as e:
@@ -540,8 +818,8 @@ class EmailTesterGUI(QMainWindow):
                 f"No se pudo generar la vista previa: {str(e)}"
             )
 
-    def make_api_request(self, endpoint, data):
-        """Realiza una petición a la API con los headers correctos"""
+    def make_batch_request(self, data):
+        """Realiza una petición al endpoint de envío en lote"""
         # Validar API key
         if not self.api_key_input.text():
             QMessageBox.warning(self, "Error", "La API key es requerida")
@@ -552,23 +830,61 @@ class EmailTesterGUI(QMainWindow):
             "Content-Type": "application/json"
         }
         
+        # Verificar que los datos de la compañía sean correctos
+        company_data = data.get("company", {})
+        if not company_data.get("name") or not company_data.get("support_email"):
+            QMessageBox.warning(self, "Error", "El nombre de la empresa y email de soporte son requeridos")
+            return
+        
+        # Si hay muchos destinatarios, mostrar una barra de progreso
+        recipients = data.get("recipients", [])
+        if len(recipients) > 5:
+            from PyQt5.QtWidgets import QProgressDialog
+            from PyQt5.QtCore import Qt
+            
+            progress = QProgressDialog("Enviando emails...", "Cancelar", 0, 0, self)
+            progress.setWindowTitle("Procesando")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.show()
+        else:
+            progress = None
+        
         try:
-            print(f"Realizando petición a: {self.api_url}/emails/{endpoint}")
+            print(f"Realizando petición a: {self.api_url}/emails/batch")
+            print(f"Datos: {json.dumps(data, indent=2)}")
+            
             response = requests.post(
-                f"{self.api_url}/emails/{endpoint}",
+                f"{self.api_url}/emails/batch",
                 json=data,
                 headers=headers
             )
+            
+            # Cerrar la barra de progreso si existe
+            if progress:
+                progress.close()
             
             # Imprimir respuesta para debug
             print(f"Código de respuesta: {response.status_code}")
             print(f"Respuesta: {response.text}")
             
             if response.status_code == 200:
+                result = response.json()
+                message_type = ""
+                
+                if data.get("email_type") == "welcome":
+                    message_type = "emails de bienvenida"
+                elif data.get("email_type") == "password-reset":
+                    message_type = "emails de restablecimiento"
+                elif data.get("email_type") == "notification":
+                    message_type = "notificaciones"
+                elif data.get("email_type") == "alert":
+                    message_type = "alertas"
+                
                 QMessageBox.information(
                     self,
                     "Éxito",
-                    f"Email enviado correctamente. ID: {response.json().get('message_id')}"
+                    f"Se enviaron {result.get('sent')} {message_type} correctamente.\n" +
+                    (f"Fallaron {result.get('failed')} envíos." if result.get('failed', 0) > 0 else "")
                 )
             else:
                 error_detail = "Error desconocido"
@@ -581,15 +897,19 @@ class EmailTesterGUI(QMainWindow):
                 QMessageBox.warning(
                     self,
                     "Error",
-                    f"Error al enviar el email (código {response.status_code}): {error_detail}"
+                    f"Error al enviar los emails (código {response.status_code}): {error_detail}"
                 )
         except requests.exceptions.ConnectionError:
+            if progress:
+                progress.close()
             QMessageBox.critical(
                 self,
                 "Error",
                 f"No se pudo conectar con la API en {self.api_url}. ¿Está el servidor corriendo?"
             )
         except Exception as e:
+            if progress:
+                progress.close()
             QMessageBox.critical(
                 self,
                 "Error",
@@ -597,12 +917,43 @@ class EmailTesterGUI(QMainWindow):
             )
 
     def send_welcome_email(self):
-        """Envía un email de bienvenida"""
-        # Validar campos requeridos
-        if not self.welcome_user_email.text():
+        """Envía emails de bienvenida personalizados en lote"""
+        # Obtener emails
+        emails_text = self.welcome_user_email.toPlainText()
+        if not emails_text.strip():
             QMessageBox.warning(self, "Error", "El email del usuario es requerido")
             return
+        
+        # Procesar los emails (uno por línea)
+        emails = [email.strip() for email in emails_text.split('\n') if email.strip()]
+        if not emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails")
+            return
+        
+        # Obtener nombres personalizados si existen
+        names = getattr(self.welcome_user_email, 'recipient_names', [])
+        
+        # Validar emails
+        valid_emails, invalid_emails = validate_emails(emails)
+        
+        if not valid_emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails válidos")
+            return
+        
+        if invalid_emails:
+            msg = "Se encontraron emails inválidos:\n\n"
+            msg += "\n".join(invalid_emails)
+            msg += "\n\n¿Desea continuar con los emails válidos?"
             
+            reply = QMessageBox.question(
+                self, "Emails inválidos", msg,
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            )
+            
+            if reply == QMessageBox.No:
+                return
+        
+        # Validar campos requeridos
         if not self.welcome_dashboard_url.text():
             QMessageBox.warning(self, "Error", "La URL del dashboard es requerida")
             return
@@ -612,13 +963,31 @@ class EmailTesterGUI(QMainWindow):
         if not company_data["name"] or not company_data["support_email"]:
             QMessageBox.warning(self, "Error", "El nombre de la empresa y email de soporte son requeridos")
             return
-
+        
+        # Preparar el listado de destinatarios
+        recipients = []
+        for i, email in enumerate(valid_emails):
+            # Obtener el índice original para acceder al nombre correcto
+            original_idx = emails.index(email)
+            
+            # Obtener el nombre correspondiente
+            name = None
+            if original_idx < len(names) and names[original_idx]:
+                name = names[original_idx]
+            else:
+                name = self.welcome_user_name.text()
+            
+            # Añadir destinatario
+            recipients.append({
+                "email": email,
+                "name": name
+            })
+        
+        # Preparar datos para la API
         data = {
+            "email_type": "welcome",
             "company": company_data,
-            "user": {
-                "name": self.welcome_user_name.text() or None,
-                "email": self.welcome_user_email.text()
-            },
+            "recipients": recipients,
             "query": {
                 "dashboard_url": self.welcome_dashboard_url.text()
             }
@@ -627,25 +996,74 @@ class EmailTesterGUI(QMainWindow):
         # Imprimir datos para debug
         print("Enviando datos:", json.dumps(data, indent=2))
         
-        self.make_api_request("welcome", data)
+        self.make_batch_request(data)
 
     def send_password_reset(self):
-        """Envía un email de reset de contraseña"""
-        # Validar campos requeridos
-        if not self.reset_user_email.text():
+        """Envía emails de restablecimiento de contraseña personalizados en lote"""
+        # Obtener emails
+        emails_text = self.reset_user_email.toPlainText()
+        if not emails_text.strip():
             QMessageBox.warning(self, "Error", "El email del usuario es requerido")
             return
+        
+        # Procesar los emails (uno por línea)
+        emails = [email.strip() for email in emails_text.split('\n') if email.strip()]
+        if not emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails")
+            return
+        
+        # Obtener nombres personalizados si existen
+        names = getattr(self.reset_user_email, 'recipient_names', [])
+        
+        # Validar emails
+        valid_emails, invalid_emails = validate_emails(emails)
+        
+        if not valid_emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails válidos")
+            return
+        
+        if invalid_emails:
+            msg = "Se encontraron emails inválidos:\n\n"
+            msg += "\n".join(invalid_emails)
+            msg += "\n\n¿Desea continuar con los emails válidos?"
             
+            reply = QMessageBox.question(
+                self, "Emails inválidos", msg,
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            )
+            
+            if reply == QMessageBox.No:
+                return
+        
+        # Validar campos requeridos
         if not self.reset_url.text():
             QMessageBox.warning(self, "Error", "La URL de reset es requerida")
             return
-
+        
+        # Preparar el listado de destinatarios
+        recipients = []
+        for i, email in enumerate(valid_emails):
+            # Obtener el índice original para acceder al nombre correcto
+            original_idx = emails.index(email)
+            
+            # Obtener el nombre correspondiente
+            name = None
+            if original_idx < len(names) and names[original_idx]:
+                name = names[original_idx]
+            else:
+                name = self.reset_user_name.text()
+            
+            # Añadir destinatario
+            recipients.append({
+                "email": email,
+                "name": name
+            })
+        
+        # Preparar datos para la API
         data = {
+            "email_type": "password-reset",
             "company": self.get_company_data(),
-            "user": {
-                "name": self.reset_user_name.text() or None,
-                "email": self.reset_user_email.text()
-            },
+            "recipients": recipients,
             "query": {
                 "reset_url": self.reset_url.text(),
                 "expires_in": self.expires_in.value()
@@ -655,21 +1073,70 @@ class EmailTesterGUI(QMainWindow):
         # Imprimir datos para debug
         print("Enviando datos:", json.dumps(data, indent=2))
         
-        self.make_api_request("password-reset", data)
+        # Hacer la petición a la API
+        self.make_batch_request(data)
 
     def send_notification(self):
-        """Envía una notificación"""
-        # Validar campos requeridos
-        if not self.notification_user_email.text():
+        """Envía notificaciones personalizadas en lote"""
+        # Obtener emails
+        emails_text = self.notification_user_email.toPlainText()
+        if not emails_text.strip():
             QMessageBox.warning(self, "Error", "El email del usuario es requerido")
             return
-
+        
+        # Procesar los emails (uno por línea)
+        emails = [email.strip() for email in emails_text.split('\n') if email.strip()]
+        if not emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails")
+            return
+        
+        # Obtener nombres personalizados si existen
+        names = getattr(self.notification_user_email, 'recipient_names', [])
+        
+        # Validar emails
+        valid_emails, invalid_emails = validate_emails(emails)
+        
+        if not valid_emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails válidos")
+            return
+        
+        if invalid_emails:
+            msg = "Se encontraron emails inválidos:\n\n"
+            msg += "\n".join(invalid_emails)
+            msg += "\n\n¿Desea continuar con los emails válidos?"
+            
+            reply = QMessageBox.question(
+                self, "Emails inválidos", msg,
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            )
+            
+            if reply == QMessageBox.No:
+                return
+        
+        # Preparar el listado de destinatarios
+        recipients = []
+        for i, email in enumerate(valid_emails):
+            # Obtener el índice original para acceder al nombre correcto
+            original_idx = emails.index(email)
+            
+            # Obtener el nombre correspondiente
+            name = None
+            if original_idx < len(names) and names[original_idx]:
+                name = names[original_idx]
+            else:
+                name = self.notification_user_name.text()
+            
+            # Añadir destinatario
+            recipients.append({
+                "email": email,
+                "name": name
+            })
+        
+        # Preparar datos para la API
         data = {
+            "email_type": "notification",
             "company": self.get_company_data(),
-            "user": {
-                "name": self.notification_user_name.text() or None,
-                "email": self.notification_user_email.text()
-            },
+            "recipients": recipients,
             "query": {
                 "title": self.notification_title.text(),
                 "message": self.notification_message.toPlainText(),
@@ -685,33 +1152,96 @@ class EmailTesterGUI(QMainWindow):
         # Imprimir datos para debug
         print("Enviando datos:", json.dumps(data, indent=2))
         
-        self.make_api_request("notification", data)
+        # Hacer la petición a la API
+        self.make_batch_request(data)
 
     def send_alert(self):
-        """Envía una alerta"""
+        """Envía alertas personalizadas en lote"""
+        # Obtener emails
+        emails_text = self.alert_user_email.toPlainText()
+        if not emails_text.strip():
+            QMessageBox.warning(self, "Error", "El email del usuario es requerido")
+            return
+        
+        # Procesar los emails (uno por línea)
+        emails = [email.strip() for email in emails_text.split('\n') if email.strip()]
+        if not emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails")
+            return
+        
+        # Obtener nombres personalizados si existen
+        names = getattr(self.alert_user_email, 'recipient_names', [])
+        
+        # Validar emails
+        valid_emails, invalid_emails = validate_emails(emails)
+        
+        if not valid_emails:
+            QMessageBox.warning(self, "Error", "No se encontraron emails válidos")
+            return
+        
+        if invalid_emails:
+            msg = "Se encontraron emails inválidos:\n\n"
+            msg += "\n".join(invalid_emails)
+            msg += "\n\n¿Desea continuar con los emails válidos?"
+            
+            reply = QMessageBox.question(
+                self, "Emails inválidos", msg,
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            )
+            
+            if reply == QMessageBox.No:
+                return
+        
+        # Obtener pasos
         steps = [
             step.strip() 
             for step in self.alert_steps.toPlainText().split("\n") 
             if step.strip()
         ]
         
-        data = {
-            "company": self.get_company_data(),
-            "user": {
-                "name": self.alert_user_name.text(),
-                "email": self.alert_user_email.text()
-            },
-            "alert": {
-                "title": self.alert_title.text(),
-                "message": self.alert_message.toPlainText(),
-                "type": self.alert_type.currentText(),
-                "steps": steps if steps else None,
-                "action_url": self.alert_action_url.text() or None,
-                "action_text": self.alert_action_text.text() or None,
-                "contact_support": self.alert_contact_support.isChecked()
-            }
+        # Preparar el listado de destinatarios
+        recipients = []
+        for i, email in enumerate(valid_emails):
+            # Obtener el índice original para acceder al nombre correcto
+            original_idx = emails.index(email)
+            
+            # Obtener el nombre correspondiente
+            name = None
+            if original_idx < len(names) and names[original_idx]:
+                name = names[original_idx]
+            else:
+                name = self.alert_user_name.text()
+            
+            # Añadir destinatario
+            recipients.append({
+                "email": email,
+                "name": name
+            })
+        
+        # Preparar datos de alerta
+        alert_data = {
+            "title": self.alert_title.text(),
+            "message": self.alert_message.toPlainText(),
+            "type": self.alert_type.currentText(),
+            "steps": steps if steps else None,
+            "action_url": self.alert_action_url.text() or None,
+            "action_text": self.alert_action_text.text() or None,
+            "contact_support": self.alert_contact_support.isChecked()
         }
-        self.make_api_request("alert", data)
+        
+        # Preparar datos para la API
+        data = {
+            "email_type": "alert",
+            "company": self.get_company_data(),
+            "recipients": recipients,
+            "alert": alert_data
+        }
+        
+        # Imprimir datos para debug
+        print("Enviando datos:", json.dumps(data, indent=2))
+        
+        # Hacer la petición a la API
+        self.make_batch_request(data)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
