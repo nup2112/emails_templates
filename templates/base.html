@@ -1,290 +1,222 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-dark: #1d4ed8;
-            --success-color: #16a34a;
-            --warning-color: #ca8a04;
-            --error-color: #dc2626;
-            --text-color: #1f2937;
-            --text-light: #6b7280;
-            --bg-color: #f3f4f6;
-            --border-color: #e5e7eb;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        /* Reset y estilos base */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email</title>
+    <style type="text/css">
+        /* Estilos generales que se convertirán a inline */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--bg-color);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            color: #1f2937;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
         }
-
-        /* Layout principal */
+                
+        /* Tabla principal para contenido */
         .container {
             max-width: 600px;
             margin: 20px auto;
-            background-color: white;
+            background-color: #ffffff;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: var(--card-shadow);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-
-        /* Header mejorado */
+        
+        /* Header */
         .header {
             padding: 32px 24px;
             text-align: center;
-            background-color: var(--primary-color);
-            color: white;
-            position: relative;
+            background-color: #9e1092;
+            color: #ffffff;
         }
-
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: -20px;
-            left: 0;
-            right: 0;
-            height: 20px;
-            background: linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0%, transparent 100%);
-        }
-
+        
         .logo {
             max-width: 180px;
             height: auto;
             margin-bottom: 24px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-
+        
         .header h1 {
             font-size: 28px;
             font-weight: 700;
             margin: 0;
             line-height: 1.2;
         }
-
-        /* Contenido principal */
+        
+        /* Contenido */
         .content {
             padding: 32px 24px;
-            background-color: white;
+            background-color: #ffffff;
         }
-
-        /* Títulos y texto */
+        
+        /* Cards */
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        /* Encabezados */
         h2 {
             font-size: 24px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #1f2937;
             margin-bottom: 16px;
+            margin-top: 0;
         }
-
+        
         h3 {
             font-size: 20px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #1f2937;
             margin: 24px 0 12px;
         }
-
+        
+        /* Párrafos */
         p {
             margin-bottom: 16px;
-            color: var(--text-color);
+            color: #1f2937;
         }
-
-        /* Botones mejorados */
+        
+        /* Botones */
         .button {
             display: inline-block;
             padding: 12px 24px;
-            background-color: var(--primary-color);
-            color: white;
+            background-color: #9e1092;
+            color: #ffffff !important;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 500;
             font-size: 16px;
-            transition: all 0.2s ease;
             text-align: center;
-            border: 2px solid transparent;
+            margin: 12px 0;
         }
-
-        .button:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
+        
+        /* Botones alternativos */
         .button-outline {
             background-color: transparent;
-            border-color: var(--primary-color);
-            color: var(--primary-color);
+            border: 2px solid #9e1092;
+            color: #9e1092 !important;
         }
-
-        .button-outline:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        /* Cards y secciones */
-        .card {
-            background-color: white;
+        
+        /* Alertas */
+        .alert {
+            padding: 16px;
             border-radius: 8px;
-            padding: 24px;
             margin-bottom: 24px;
-            border: 1px solid var(--border-color);
-            transition: box-shadow 0.2s ease;
+            border-left: 4px solid #e5e7eb;
         }
-
-        .card:hover {
-            box-shadow: var(--card-shadow);
+        
+        .alert-success {
+            background-color: #f0fdf4;
+            border-left-color: #16a34a;
+            color: #16a34a;
         }
-
-        /* Tablas mejoradas */
-        .table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 24px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
+        
+        .alert-warning {
+            background-color: #fefce8;
+            border-left-color: #ca8a04;
+            color: #ca8a04;
         }
-
-        .table th,
-        .table td {
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+        
+        .alert-error {
+            background-color: #fef2f2;
+            border-left-color: #dc2626;
+            color: #dc2626;
         }
-
-        .table th {
-            background-color: #f8fafc;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8fafc;
-        }
-
-        /* Listas mejoradas */
+        
+        /* Listas */
         ul, ol {
             margin: 16px 0;
             padding-left: 24px;
         }
-
+        
         li {
             margin-bottom: 8px;
-            color: var(--text-color);
+            color: #1f2937;
         }
-
-        /* Footer mejorado */
+        
+        /* Footer */
         .footer {
             padding: 24px;
             text-align: center;
             background-color: #f8fafc;
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid #e5e7eb;
         }
-
+        
         .footer p {
             font-size: 14px;
-            color: var(--text-light);
+            color: #6b7280;
             margin: 4px 0;
         }
-
+        
+        /* Enlaces sociales */
         .social-links {
             margin: 20px 0;
-            display: flex;
-            justify-content: center;
-            gap: 16px;
+            text-align: center;
         }
-
+        
         .social-link {
-            color: var(--text-light);
+            color: #6b7280;
             text-decoration: none;
             font-size: 14px;
-            transition: color 0.2s ease;
+            margin: 0 8px;
         }
-
-        .social-link:hover {
-            color: var(--primary-color);
-        }
-
+        
         /* Utilidades */
         .text-center { text-align: center; }
         .mt-4 { margin-top: 24px; }
         .mb-4 { margin-bottom: 24px; }
         .mx-auto { margin-left: auto; margin-right: auto; }
-
-        /* Notificaciones y alertas */
-        .alert {
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            border-left: 4px solid;
+        
+        /* Compatibilidad con Outlook/GMail */
+        table {
+            border-collapse: separate;
         }
-
-        .alert-success {
-            background-color: #f0fdf4;
-            border-left-color: var(--success-color);
-            color: var(--success-color);
+        
+        td, th {
+            padding: 0;
         }
-
-        .alert-warning {
-            background-color: #fefce8;
-            border-left-color: var(--warning-color);
-            color: var(--warning-color);
+        
+        img {
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
         }
-
-        .alert-error {
-            background-color: #fef2f2;
-            border-left-color: var(--error-color);
-            color: var(--error-color);
-        }
-
-        /* Responsive */
-        @media screen and (max-width: 640px) {
+        
+        /* Media queries */
+        @media screen and (max-width: 600px) {
             .container {
-                margin: 0;
-                border-radius: 0;
+                width: 100% !important;
+                margin: 0 !important;
             }
-
-            .header {
-                padding: 24px 16px;
-            }
-
-            .content {
-                padding: 24px 16px;
-            }
-
+            
             .button {
                 display: block;
                 width: 100%;
             }
-
-            .table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
         }
     </style>
 </head>
-<body>
-    {% block content %}{% endblock %}
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <!-- Tabla principal que contiene todo -->
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <!-- Tabla del contenedor principal -->
+                <table class="container" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    {% block content %}{% endblock %}
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

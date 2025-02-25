@@ -1,72 +1,133 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="header">
-        {% if company.logo_url %}
-        <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="logo">
-        {% endif %}
-        <h1>¡Bienvenido a {{ company.name }}!</h1>
-    </div>
+<!-- Header -->
+<tr>
+    <td style="padding: 0;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td class="header" align="center" style="padding: 32px 24px; background-color: #9e1092; color: #ffffff;">
+                    {% if company.logo_url %}
+                    <img src="{{ company.logo_url }}" alt="{{ company.name }}" class="logo" style="max-width: 180px; height: auto; margin-bottom: 24px; border-radius: 8px;">
+                    {% endif %}
+                    <h1 style="font-size: 28px; font-weight: 700; margin: 0; line-height: 1.2;">¡Bienvenido a {{ company.name }}!</h1>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
 
-    <div class="content">
-        <div class="card">
-            <h2>¡Hola {{ user.name }}! 👋</h2>
-            <p class="mb-4">Nos alegra mucho darte la bienvenida a nuestra comunidad. Tu cuenta ha sido creada exitosamente con el email: <strong>{{ user.email }}</strong></p>
-            
-            <div class="text-center">
-                <a href="{{ dashboard_url }}" class="button">
-                    Acceder a tu Dashboard
-                </a>
-            </div>
-        </div>
+<!-- Contenido -->
+<tr>
+    <td class="content" style="padding: 32px 24px; background-color: #ffffff;">
+        <!-- Tarjeta de bienvenida -->
+        <table class="card" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <tr>
+                <td style="padding: 24px;">
+                    <h2 style="font-size: 24px; font-weight: 600; color: #1f2937; margin-top: 0; margin-bottom: 16px;">¡Hola {{ user.name }}! 👋</h2>
+                    <p style="margin-bottom: 16px; color: #1f2937;">Nos alegra mucho darte la bienvenida a nuestra comunidad. Tu cuenta ha sido creada exitosamente con el email: <strong>{{ user.email }}</strong></p>
+                    
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tr>
+                            <td align="center">
+                                <table border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td align="center" style="border-radius: 8px;" bgcolor="#9e1092">
+                                            <a href="{{ dashboard_url }}" class="button" style="display: inline-block; padding: 12px 24px; background-color: #9e1092; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 16px; text-align: center; border: 2px solid transparent; margin: 12px 0;">
+                                                Acceder a tu Dashboard
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-        <div class="card">
-            <h3>🎯 Próximos pasos</h3>
-            <ul>
-                <li>
-                    <strong>Personaliza tu perfil</strong>
-                    <p>Configura tu información para aprovechar al máximo tu experiencia</p>
-                </li>
-                <li>
-                    <strong>Explora nuestros servicios</strong>
-                    <p>Descubre todo lo que tenemos para ofrecerte</p>
-                </li>
-                <li>
-                    <strong>Conecta con la comunidad</strong>
-                    <p>Interactúa con otros miembros y comparte experiencias</p>
-                </li>
-                <li>
-                    <strong>Configura tus notificaciones</strong>
-                    <p>Decide qué información quieres recibir y cuándo</p>
-                </li>
-            </ul>
-        </div>
+        <!-- Tarjeta de pasos siguientes -->
+        <table class="card" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <tr>
+                <td style="padding: 24px;">
+                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0;">🎯 Próximos pasos</h3>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <!-- Paso 1 -->
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <strong style="color: #1f2937;">Personaliza tu perfil</strong>
+                                <p style="margin: 4px 0 12px 0; color: #1f2937;">Configura tu información para aprovechar al máximo tu experiencia</p>
+                            </td>
+                        </tr>
+                        <!-- Paso 2 -->
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <strong style="color: #1f2937;">Explora nuestros servicios</strong>
+                                <p style="margin: 4px 0 12px 0; color: #1f2937;">Descubre todo lo que tenemos para ofrecerte</p>
+                            </td>
+                        </tr>
+                        <!-- Paso 3 -->
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <strong style="color: #1f2937;">Conecta con la comunidad</strong>
+                                <p style="margin: 4px 0 12px 0; color: #1f2937;">Interactúa con otros miembros y comparte experiencias</p>
+                            </td>
+                        </tr>
+                        <!-- Paso 4 -->
+                        <tr>
+                            <td style="padding: 8px 0;">
+                                <strong style="color: #1f2937;">Configura tus notificaciones</strong>
+                                <p style="margin: 4px 0 12px 0; color: #1f2937;">Decide qué información quieres recibir y cuándo</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-        <div class="card">
-            <h3>💬 ¿Necesitas ayuda?</h3>
-            <p>Nuestro equipo de soporte está disponible para ayudarte en cualquier momento:</p>
-            <div class="alert alert-success">
-                <p><strong>Email:</strong> {{ company.support_email }}</p>
-                <p><strong>Web:</strong> {{ company.website }}</p>
-            </div>
-        </div>
-    </div>
+        <!-- Tarjeta de ayuda -->
+        <table class="card" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <tr>
+                <td style="padding: 24px;">
+                    <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0;">💬 ¿Necesitas ayuda?</h3>
+                    <p style="margin-bottom: 16px; color: #1f2937;">Nuestro equipo de soporte está disponible para ayudarte en cualquier momento:</p>
+                    
+                    <table class="alert alert-success" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px;">
+                        <tr>
+                            <td style="padding: 16px; color: #16a34a;">
+                                <p style="margin: 0 0 8px 0;"><strong>Email:</strong> {{ company.support_email }}</p>
+                                <p style="margin: 0;"><strong>Web:</strong> {{ company.website }}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
 
-    <div class="footer">
-        <div class="social-links">
-            {% if company.social_media.facebook %}
-            <a href="{{ company.social_media.facebook }}" class="social-link">Facebook</a>
-            {% endif %}
-            {% if company.social_media.twitter %}
-            <a href="{{ company.social_media.twitter }}" class="social-link">Twitter</a>
-            {% endif %}
-            {% if company.social_media.instagram %}
-            <a href="{{ company.social_media.instagram }}" class="social-link">Instagram</a>
-            {% endif %}
-        </div>
-        <p>© {{ year }} {{ company.name }}. Todos los derechos reservados.</p>
-        <p>{{ company.address }}</p>
-    </div>
-</div>
+<!-- Footer -->
+<tr>
+    <td class="footer" style="padding: 24px; text-align: center; background-color: #f8fafc; border-top: 1px solid #e5e7eb;">
+        <!-- Enlaces sociales -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td class="social-links" align="center" style="padding: 12px 0;">
+                    {% if company.social_media.facebook %}
+                    <a href="{{ company.social_media.facebook }}" class="social-link" style="color: #6b7280; text-decoration: none; font-size: 14px; margin: 0 8px;">Facebook</a>
+                    {% endif %}
+                    {% if company.social_media.twitter %}
+                    <a href="{{ company.social_media.twitter }}" class="social-link" style="color: #6b7280; text-decoration: none; font-size: 14px; margin: 0 8px;">Twitter</a>
+                    {% endif %}
+                    {% if company.social_media.instagram %}
+                    <a href="{{ company.social_media.instagram }}" class="social-link" style="color: #6b7280; text-decoration: none; font-size: 14px; margin: 0 8px;">Instagram</a>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        
+        <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">© {{ year }} {{ company.name }}. Todos los derechos reservados.</p>
+        <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">{{ company.address }}</p>
+    </td>
+</tr>
 {% endblock %}

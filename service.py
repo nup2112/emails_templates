@@ -4,6 +4,7 @@ import resend
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from models import EmailAddress
 from emails.base import BaseEmail
+from premailer import Premailer  # Nuevo import
 
 class EmailService:
     """Servicio para envío de emails utilizando Resend."""
@@ -28,12 +29,32 @@ class EmailService:
         if not templates_dir.exists():
             raise ValueError(f"El directorio de templates no existe: {templates_dir}")
             
+        self.templates_dir = templates_dir  # Guardar para referencia
         self.template_env = Environment(
             loader=FileSystemLoader(templates_dir),
             autoescape=select_autoescape(['html', 'xml']),
             trim_blocks=True,
             lstrip_blocks=True
         )
+    
+    def _render_with_inline_styles(self, template_name, context):
+        """Renderiza una plantilla y convierte sus estilos a inline."""
+        template = self.template_env.get_template(template_name)
+        html = template.render(**context)
+        
+        # Usar premailer para convertir estilos a inline
+        try:
+            premailer = Premailer(
+                html,
+                keep_style_tags=True,
+                remove_classes=False,
+                strip_important=False
+            )
+            return premailer.transform()
+        except Exception as e:
+            print(f"Error al convertir estilos a inline: {str(e)}")
+            # Fallback al HTML original si hay error
+            return html
     
     def send(
         self,
@@ -71,8 +92,11 @@ class EmailService:
             
         # Si no se requiere personalización, enviar email tradicional
         if not personalize:
-            template = self.template_env.get_template(email.template_name)
-            html_content = template.render(**email.get_template_data())
+            # Usar la nueva función que incluye estilos inline
+            html_content = self._render_with_inline_styles(
+                email.template_name, 
+                email.get_template_data()
+            )
             
             params = {
                 "from": str(from_email),
@@ -105,9 +129,11 @@ class EmailService:
                     'email': recipient.email
                 }
                 
-            # Renderizar la plantilla con los datos personalizados
-            template = self.template_env.get_template(email.template_name)
-            html_content = template.render(**template_data)
+            # Renderizar con estilos inline
+            html_content = self._render_with_inline_styles(
+                email.template_name,
+                template_data
+            )
             
             # Preparar los parámetros para esta persona
             params = {
@@ -135,17 +161,6 @@ class EmailService:
     ) -> List[dict]:
         """
         Envía emails personalizados a múltiples destinatarios en un lote.
-        
-        Args:
-            email: Instancia de BaseEmail con la plantilla base
-            recipients: Lista de diccionarios con datos de los destinatarios
-                        Cada dict debe tener al menos 'email' y opcionalmente 'name'
-                        Puede tener datos adicionales para personalizar el contenido
-            subject: Asunto del email
-            from_email: Remitente (opcional, usa default_from si no se especifica)
-            
-        Returns:
-            List[dict]: Lista de respuestas de la API de Resend
         """
         email.validate()
         
@@ -183,9 +198,11 @@ class EmailService:
                 # Reemplazar en los datos de la plantilla
                 template_data['user'] = user_data
             
-            # Renderizar la plantilla con los datos personalizados
-            template = self.template_env.get_template(email.template_name)
-            html_content = template.render(**template_data)
+            # Renderizar con estilos inline
+            html_content = self._render_with_inline_styles(
+                email.template_name, 
+                template_data
+            )
             
             # Preparar los parámetros para esta persona
             params = {
