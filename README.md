@@ -23,7 +23,7 @@ Un sistema completo de envío de emails basado en FastAPI con plantillas HTML re
 1. Clona el repositorio:
 
 ```bash
-git clone https://github.com/tuusuario/email-system-api.git
+git clone https://github.com/nup2112/emails_templates.git
 cd email-system-api
 ```
 
@@ -160,7 +160,7 @@ print(response.json())
 ## 📁 Estructura del proyecto
 
 ```
-email-system-api/
+email_templates/
 ├── api.py                 # Aplicación FastAPI principal
 ├── models.py              # Modelos de datos
 ├── service.py             # Servicio de emails
