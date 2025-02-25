@@ -1,151 +1,193 @@
-# Sistema de Plantillas de Email 📧
+# Sistema de Emails API
 
-Un sistema robusto y flexible para el envío de emails transaccionales y marketing, construido con Python y Jinja2, integrado con el servicio de Resend.
+Un sistema completo de envío de emails basado en FastAPI con plantillas HTML responsivas y personalizadas.
 
-## 🌟 Características
+## ✨ Características
 
-- **Plantillas Responsivas**: Diseños adaptables y modernos para todos los clientes de correo
-- **Múltiples Tipos de Email**:
-  - Emails de Bienvenida
-  - Restablecimiento de Contraseña
-  - Notificaciones
-  - Alertas
-
-- **Diseño Modular**: Arquitectura basada en componentes reutilizables
-- **Validación Integrada**: Verificación automática de datos y direcciones de email
-- **Personalización**: Soporte completo para la marca de tu empresa
-- **Integración con Resend**: API de envío de emails moderna y confiable
+- 🚀 API RESTful construida con FastAPI
+- 📧 Múltiples tipos de emails (bienvenida, restablecimiento de contraseña, notificaciones, alertas)
+- 🎨 Plantillas HTML responsivas con estilos modernos
+- 🔄 Soporte para envío de emails en lote
+- 🔒 Autenticación mediante API Key
+- 🎯 Personalización de contenido por destinatario
+- 📱 Diseño adaptable a dispositivos móviles
+- 🌐 Integración con el servicio de Resend para envío confiable
 
 ## 📋 Requisitos
 
-- Python 3.7+
-- Resend API Key
-- Jinja2
-- Dataclasses (incluido en Python 3.7+)
+- Python 3.8+
+- Cuenta en [Resend](https://resend.com) para el envío de emails
 
-## 🚀 Instalación
+## 🛠️ Instalación
 
 1. Clona el repositorio:
+
 ```bash
-git clone [url-del-repositorio]
-cd sistema-emails
+git clone https://github.com/tuusuario/email-system-api.git
+cd email-system-api
 ```
 
-2. Instala las dependencias:
+2. Crea y activa un entorno virtual:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+```
+
+3. Instala las dependencias:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configura las variables de entorno:
+## ⚙️ Configuración
+
+1. Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+
+```
+RESEND_API_KEY=tu_api_key_de_resend
+API_KEY=tu_api_key_para_seguridad
+DEFAULT_FROM_EMAIL=no-reply@tudominio.com
+DEFAULT_FROM_NAME=Nombre de tu empresa
+```
+
+2. Personaliza las plantillas HTML en la carpeta `templates` según sea necesario.
+
+## 🚀 Uso
+
+### Iniciar el servidor
+
 ```bash
-export RESEND_API_KEY='tu-api-key'
+uvicorn api:app --reload
 ```
 
-## 💡 Uso
+El servidor estará disponible en `http://localhost:8000`.
 
-### Configuración Básica
+### Documentación interactiva
+
+Accede a la documentación interactiva de la API en:
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+## 📝 Ejemplos de uso
+
+### Enviar un email de bienvenida
 
 ```python
-from models import EmailAddress, Company
-from service import EmailService
+import requests
+import json
 
-# Configura la información de tu empresa
-company = Company(
-    name="Tu Empresa",
-    address="Tu Dirección",
-    support_email=EmailAddress("soporte@tuempresa.com"),
-    website="https://tuempresa.com",
-    logo_url="https://tuempresa.com/logo.png"
-)
+url = "http://localhost:8000/api/emails/welcome"
+headers = {
+    "X-API-Key": "tu_api_key",
+    "Content-Type": "application/json"
+}
+payload = {
+    "company": {
+        "name": "Mi Empresa",
+        "address": "Calle Principal 123",
+        "support_email": "soporte@miempresa.com",
+        "website": "https://miempresa.com",
+        "social_media": {
+            "facebook": "https://facebook.com/miempresa",
+            "twitter": "https://twitter.com/miempresa"
+        },
+        "logo_url": "https://miempresa.com/logo.png"
+    },
+    "user": {
+        "email": "usuario@ejemplo.com",
+        "name": "Juan Pérez"
+    },
+    "query": {
+        "dashboard_url": "https://miempresa.com/dashboard"
+    }
+}
 
-# Inicializa el servicio de email
-email_service = EmailService(
-    api_key="tu-api-key-de-resend",
-    default_from=EmailAddress("no-reply@tuempresa.com", "Tu Empresa")
-)
+response = requests.post(url, headers=headers, data=json.dumps(payload))
+print(response.json())
 ```
 
-### Envío de Emails
+### Enviar notificaciones a múltiples usuarios
 
-#### Email de Bienvenida
 ```python
-from templates import WelcomeEmail
+import requests
+import json
 
-welcome_email = WelcomeEmail(
-    company=company,
-    user=EmailAddress("usuario@ejemplo.com", "Nuevo Usuario"),
-    dashboard_url="https://tuempresa.com/dashboard"
-)
+url = "http://localhost:8000/api/emails/batch"
+headers = {
+    "X-API-Key": "tu_api_key",
+    "Content-Type": "application/json"
+}
+payload = {
+    "email_type": "notification",
+    "company": {
+        "name": "Mi Empresa",
+        "address": "Calle Principal 123",
+        "support_email": "soporte@miempresa.com",
+        "website": "https://miempresa.com",
+        "logo_url": "https://miempresa.com/logo.png"
+    },
+    "recipients": [
+        {"email": "usuario1@ejemplo.com", "name": "Usuario Uno"},
+        {"email": "usuario2@ejemplo.com", "name": "Usuario Dos"},
+        {"email": "usuario3@ejemplo.com", "name": "Usuario Tres"}
+    ],
+    "query": {
+        "title": "Nueva actualización disponible",
+        "message": "Hemos lanzado nuevas funciones en nuestra plataforma.",
+        "type": "info",
+        "action_url": "https://miempresa.com/novedades",
+        "action_text": "Ver novedades",
+        "preferences_url": "https://miempresa.com/preferencias"
+    }
+}
 
-email_service.send(
-    email=welcome_email,
-    to=EmailAddress("usuario@ejemplo.com", "Nuevo Usuario"),
-    subject="¡Bienvenido a Tu Empresa!"
-)
+response = requests.post(url, headers=headers, data=json.dumps(payload))
+print(response.json())
 ```
 
-## 📝 Plantillas Disponibles
+## 📡 Endpoints de la API
 
-1. **welcome.html**: Email de bienvenida para nuevos usuarios
-4. **password_reset.html**: Restablecimiento de contraseña
-5. **notification.html**: Notificaciones generales
-6. **alert.html**: Alertas y advertencias
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/emails/batch` | Envía emails personalizados a múltiples destinatarios en un lote |
+| POST | `/api/emails/welcome` | Envía un email de bienvenida |
+| POST | `/api/emails/password-reset` | Envía un email de restablecimiento de contraseña |
+| POST | `/api/emails/notification` | Envía un email de notificación |
+| POST | `/api/emails/alert` | Envía un email de alerta |
 
-## 🎨 Personalización
-
-Todas las plantillas pueden ser personalizadas modificando:
-
-- Colores y estilos en `base.html`
-- Contenido y estructura en las plantillas individuales
-- Variables de la marca en la configuración de Company
-
-## 🛡️ Validación
-
-El sistema incluye validaciones automáticas para:
-
-- Direcciones de email válidas
-- Datos requeridos en las plantillas
-- Cantidades y precios en órdenes
-- Estructura de datos consistente
-
-## 📚 Estructura del Proyecto
+## 📁 Estructura del proyecto
 
 ```
-sistema-emails/
+email-system-api/
+├── api.py                 # Aplicación FastAPI principal
+├── models.py              # Modelos de datos
+├── service.py             # Servicio de emails
+├── main.py                # GUI de prueba
 ├── emails/
-│   ├── __init__.py
-│   ├── base.py
-│   ├── models.py
-│   ├── service.py
-│   └── templates.py
+│   ├── __init__.py 
+│   ├── base.py            # Clase base para emails
+│   ├── validation.py      # Utilidades de validación
+│   └── templates.py       # Clases para cada tipo de email
 ├── templates/
-│   ├── alert.html
-│   ├── base.html
-│   ├── notification.html
-│   ├── password_reset.html
-│   └── welcome.html
-├── requirements.txt
-└── README.md
+│   ├── base.html          # Plantilla base HTML
+│   ├── welcome.html       # Plantilla de bienvenida
+│   ├── password_reset.html # Plantilla de reset de contraseña
+│   ├── notification.html  # Plantilla de notificaciones
+│   └── alert.html         # Plantilla de alertas
+└── requirements.txt       # Dependencias del proyecto
 ```
 
-## 🤝 Contribución
+## 🔧 Personalización
 
-Las contribuciones son bienvenidas. Por favor, sigue estos pasos:
+### Añadir una nueva plantilla de email
 
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+1. Crea un nuevo archivo HTML en la carpeta `templates/`
+2. Extiende la plantilla base: `{% extends "base.html" %}`
+3. Crea una nueva clase en `emails/templates.py` que extienda `BaseEmail`
+4. Añade un nuevo endpoint en `api.py` para el nuevo tipo de email
 
 ## 📄 Licencia
 
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE.md](LICENSE.md) para más detalles.
-
-## 🙋‍♂️ Soporte
-
-Si tienes alguna pregunta o necesitas ayuda, no dudes en:
-
-- Abrir un issue en el repositorio
-- Contactar al equipo de soporte: soporte@tuempresa.com
-- Consultar la documentación completa en: docs.tuempresa.com
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
